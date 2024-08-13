@@ -28,9 +28,10 @@ This application provides a comprehensive platform for conducting AI-powered moc
 ## 📖 Getting Started
 
 1. Clone the Repository: 
-  
-   git clone https://github.com/your-username/mock-interview-app.git
+  ```bash
+   git clone https://github.com/vedantpople4/MockAI.git
    cd mock-interview-app
+ ```
 
 2. Install Dependencies:
  ```bash
