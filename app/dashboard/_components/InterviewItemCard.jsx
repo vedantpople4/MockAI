@@ -8,12 +8,12 @@ function InterviewItemCard({ interview }) {
 
     const onStart=()=>{
         router.push('/dashboard/interview/'+interview?.mockId)
-        console.log("pushed")
+        //console.log("pushed")
     }
 
     const onFeedback=()=>{
         router.push('/dashboard/interview/'+interview?.mockId+'/feedback')
-        console.log("pushed")
+        //console.log("pushed")
     }
     
 
