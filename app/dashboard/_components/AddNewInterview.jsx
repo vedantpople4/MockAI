@@ -12,59 +12,34 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { chatSession } from '@/utils/GeminiAIModel'
 import { LoaderCircle } from 'lucide-react'
-import { db } from '@/utils/db'
-import { MockInterview } from '@/utils/schema'
-import {v4 as uuidv4} from 'uuid'
-import { useUser } from '@clerk/nextjs'
-import moment from 'moment'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { createInterview } from '../_actions/createInterview'
 
 function AddNewInterview() {
     const [openDialog, setOpenDialog] = useState(false)
     const [jobPosition, setJobPosition] = useState();
     const [jobDescription, setJobDescription] = useState();
     const [jobExperience, setJobExperience] = useState();
-    const [loading, setLoading] = useState();
-    const [jsonResponse, setJsonResponse] = useState([]);
-    const {user}=useUser();
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
     const onSubmit = async(e) => {
-        setLoading(true);
         e.preventDefault()
-        console.log(jobPosition, jobDescription, jobExperience)
+        setLoading(true);
 
-        const InputPrompt="Job Position: "+jobPosition+", Job Description: "+jobDescription+", Years of experience: "+jobExperience+". Depending in the Job description, Job position and Years of experience, give me "+process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT+"Interview question along with answers in JSON format. Give question and answers as field in JSON. Dont return any other text."
+        const result = await createInterview({ jobPosition, jobDescription, jobExperience });
 
-        const result = await chatSession.sendMessage(InputPrompt);
-        const MockJsonResponse = (result.response.text()).replace('```json', '').replace('```','')
-        //console.log(MockJsonResponse);
-        setJsonResponse(MockJsonResponse);
-
-        if(MockJsonResponse){
-        const resp = await db.insert(MockInterview)
-        .values({
-            mockId: uuidv4(),
-            jsonMockResp: MockJsonResponse,
-            jobPosition: jobPosition,
-            jobDescription: jobDescription,
-            jobExperience: jobExperience,
-            createdBy: user?.primaryEmailAddress?.emailAddress,
-            createdAt: moment().format('DD-MM-yyyy')
-        }).returning({mockId: MockInterview.mockId});
-
-        console.log("Inserted ID: ", resp);
-        if(resp){
-            setOpenDialog(false);
-            router.push('/dashboard/interview/'+resp[0]?.mockId)
-            }
-        } else {
-            console.log("ERROR");
+        if (result?.error) {
+            toast(result.error);
+            setLoading(false);
+            return;
         }
 
-        setLoading(false)
+        setOpenDialog(false);
+        router.push('/dashboard/interview/'+result.mockId);
+        setLoading(false);
     }
     return (
         <div>
