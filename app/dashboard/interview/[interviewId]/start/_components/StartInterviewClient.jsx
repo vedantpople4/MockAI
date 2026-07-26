@@ -12,7 +12,7 @@ function StartInterviewClient({ interviewData, mockInterviewQuestion, parseError
     if (parseError) {
         return (
             <div className='p-5 border rounded-lg my-10 bg-red-50 text-red-700'>
-                <h2 className='font-bold text-lg'>This interview's questions couldn't be loaded</h2>
+                <h2 className='font-bold text-lg'>This interview&apos;s questions couldn&apos;t be loaded</h2>
                 <p className='text-sm mt-2'>The stored questions for this interview are corrupted. Please create a new interview.</p>
                 <Link href={'/dashboard'}>
                     <Button className='mt-5'>Back to Dashboard</Button>

@@ -38,15 +38,15 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
         ))
     }, [results])
 
+    // Deliberately keyed on userAnswer only: UpdateUserAnswer is redefined every
+    // render (not memoized) and isRecording is read fresh via closure, so adding
+    // either to the dependency array would re-run this on every render instead
+    // of only when new speech-to-text transcript arrives.
     useEffect(() => {
         if (!isRecording && userAnswer.length > 10) {
             UpdateUserAnswer();
         }
-        // if (userAnswer?.length < 10) {
-        //     setLoading(false);
-        //     toast('Error while saving your answer. Please record again.')
-        //     return;
-        // }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userAnswer])
 
     const StartStopRecording = async () => {
@@ -83,7 +83,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     return (
         <div className='flex items-center justify-center flex-col'>
             <div className='flex flex-col mt-20 bg-orange-50 justify-center items-center rounded-lg p-5'>
-                <Image src={'/webcam.png'} width={200} height={200} className='absolute' />
+                <Image src={'/webcam.png'} alt="" width={200} height={200} className='absolute' />
                 <Webcam
                     mirrored={true}
                     style={{
