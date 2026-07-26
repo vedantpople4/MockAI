@@ -16,6 +16,13 @@ import { LoaderCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { createInterview } from '../_actions/createInterview'
+import { useCyclingMessages } from '@/lib/useCyclingMessages'
+
+const GENERATING_MESSAGES = [
+    'Analyzing job description...',
+    'Crafting interview questions...',
+    'Preparing your mock interview...',
+]
 
 function AddNewInterview() {
     const [openDialog, setOpenDialog] = useState(false)
@@ -25,6 +32,7 @@ function AddNewInterview() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState();
     const router = useRouter();
+    const generatingMessage = useCyclingMessages(loading, GENERATING_MESSAGES);
 
     const onSubmit = async(e) => {
         e.preventDefault()
@@ -87,7 +95,7 @@ function AddNewInterview() {
                                 <Button type="submit" disabled={loading}>
                                     {loading?
                                     <>
-                                    <LoaderCircle className='animate-spin'/>Generating Questions
+                                    <LoaderCircle className='animate-spin'/>{generatingMessage}
                                     </> : error ? 'Try Again' : 'Start Interview'
                                     } </Button>
                             </div>

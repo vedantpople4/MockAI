@@ -4,13 +4,21 @@ import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
-import { Mic } from 'lucide-react';
+import { Mic, LoaderCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitAnswer } from '@/app/dashboard/_actions/submitAnswer';
+import { useCyclingMessages } from '@/lib/useCyclingMessages';
+
+const FEEDBACK_MESSAGES = [
+    'Analyzing your answer...',
+    'Generating feedback...',
+    'Almost done...',
+]
 
 function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData }) {
     const [userAnswer, setUserAnswer] = useState('');
     const [loading, setLoading] = useState(false);
+    const feedbackMessage = useCyclingMessages(loading, FEEDBACK_MESSAGES);
     const {
         error,
         interimResult,
@@ -97,6 +105,10 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
                     :
                     'Record Answer'}
             </Button>
+            {loading &&
+            <h2 className='flex items-center gap-2 text-sm text-gray-500 -mt-6 mb-10'>
+                <LoaderCircle className='animate-spin h-4 w-4' /> {feedbackMessage}
+            </h2>}
         </div>
 
     )
