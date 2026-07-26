@@ -23,15 +23,18 @@ function AddNewInterview() {
     const [jobDescription, setJobDescription] = useState();
     const [jobExperience, setJobExperience] = useState();
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState();
     const router = useRouter();
 
     const onSubmit = async(e) => {
         e.preventDefault()
         setLoading(true);
+        setError(undefined);
 
         const result = await createInterview({ jobPosition, jobDescription, jobExperience });
 
         if (result?.error) {
+            setError(result.error);
             toast(result.error);
             setLoading(false);
             return;
@@ -75,13 +78,17 @@ function AddNewInterview() {
                                     />
                                 </div>
                             </div>
+                            {error &&
+                            <div className='p-3 my-3 rounded-lg bg-red-50 text-red-700 text-sm'>
+                                {error}
+                            </div>}
                             <div className='flex gap-5 justify-end'>
                                 <Button type="button" variant="ghost" onClick={()=>setOpenDialog(false)}>Cancel</Button>
                                 <Button type="submit" disabled={loading}>
                                     {loading?
                                     <>
                                     <LoaderCircle className='animate-spin'/>Generating Questions
-                                    </> :'Start Interview'
+                                    </> : error ? 'Try Again' : 'Start Interview'
                                     } </Button>
                             </div>
                             </form>
