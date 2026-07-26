@@ -1,32 +1,21 @@
-"use client"
 import { db } from '@/utils/db';
 import { MockInterview } from '@/utils/schema';
-import { useUser } from '@clerk/nextjs'
+import { currentUser } from '@clerk/nextjs/server'
 import { desc, eq } from 'drizzle-orm';
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import InterviewItemCard from './InterviewItemCard';
 
-function InterviewList() {
+async function InterviewList() {
 
-    const {user} = useUser();
-    const [interviewList, setInterviewList] = useState([]);
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
 
-    useEffect(()=>{
-        user&&GetInterviewList();
-
-    },[user])
-
-    const GetInterviewList=async()=>{
-        const result = await db.select()
-        .from(MockInterview)
-        .where(eq(MockInterview.createdBy,user?.primaryEmailAddress.emailAddress))
-        .orderBy(desc(MockInterview.id));
-
-        setInterviewList(result);
-        console.log(result);
-
-    }
-
+    const interviewList = userEmail
+        ? await db.select()
+            .from(MockInterview)
+            .where(eq(MockInterview.createdBy, userEmail))
+            .orderBy(desc(MockInterview.id))
+        : [];
 
     return (
         <div>
