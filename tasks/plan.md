@@ -50,47 +50,60 @@ not theoretical.
       regardless of what the code changes do).
 
 ### Phase 1: Foundation — secrets and config
-- [ ] Task 1: Stop leaking secrets to the client and to git
+- [x] Task 1: Stop leaking secrets to the client and to git
 
 ### Checkpoint: Phase 1
-- [ ] `npm run build` succeeds with new env var names
-- [ ] `grep -r "NEXT_PUBLIC_GEMINI\|NEXT_PUBLIC_DRIZZLE" app utils` returns nothing
-- [ ] `drizzle.config.js` contains no literal credential string
-- [ ] Manual check: app still connects to DB and Gemini locally with `.env.local` updated
+- [x] `npm run build` succeeds with new env var names
+- [x] `grep -r "NEXT_PUBLIC_GEMINI\|NEXT_PUBLIC_DRIZZLE" app utils` returns nothing
+- [x] `drizzle.config.js` contains no literal credential string
+- [x] Manual check: app still connects to DB and Gemini locally with `.env.local` updated
 
 ### Phase 2: Server-side data layer (reads)
-- [ ] Task 2: Convert `InterviewList` to a Server Component with ownership-scoped query
-- [ ] Task 3: Convert the interview detail page (`interview/[interviewId]/page.jsx`) to fetch server-side with ownership check
-- [ ] Task 4: Convert the start-interview data fetch to a server-side loader, keep interactive question/answer UI client-side
-- [ ] Task 5: Convert the feedback page to a Server Component with ownership-scoped query
+- [x] Task 2: Convert `InterviewList` to a Server Component with ownership-scoped query
+- [x] Task 3: Convert the interview detail page (`interview/[interviewId]/page.jsx`) to fetch server-side with ownership check
+- [x] Task 4: Convert the start-interview data fetch to a server-side loader, keep interactive question/answer UI client-side
+- [x] Task 5: Convert the feedback page to a Server Component with ownership-scoped query
 
 ### Checkpoint: Phase 2
-- [ ] Dashboard shows only the signed-in user's interviews
-- [ ] Visiting another user's `mockId` for detail/start/feedback returns a not-found/redirect instead of their data
-- [ ] `grep -rn "\"use client\"" app/dashboard/_components/InterviewList.jsx app/dashboard/interview` shows client directive removed from the three read-only pages/components
-- [ ] No regressions: full flow (create → start → answer → feedback) still works manually
+- [x] Dashboard shows only the signed-in user's interviews
+- [x] Visiting another user's `mockId` for detail/start/feedback returns a not-found/redirect instead of their data
+- [x] `grep -rn "\"use client\"" app/dashboard/_components/InterviewList.jsx app/dashboard/interview` shows client directive removed from the three read-only pages/components
+- [x] No regressions: full flow (create → start → answer → feedback) still works manually
 
 ### Phase 3: Server-side mutations (AI + writes)
-- [ ] Task 6: Server Action for interview creation (question generation + insert)
-- [ ] Task 7: Server Action for answer submission (feedback generation + insert), fixing the `userEmail` field bug and adding safe JSON parsing
+- [x] Task 6: Server Action for interview creation (question generation + insert)
+- [x] Task 7: Server Action for answer submission (feedback generation + insert), fixing the `userEmail` field bug and adding safe JSON parsing
 
 ### Checkpoint: Phase 3
-- [ ] Creating a new interview works end to end via the Server Action, no client-side Gemini/DB import remains in `AddNewInterview.jsx`
-- [ ] Submitting a recorded answer stores a row with `userEmail` populated (verify via `db:studio` or a `select`)
-- [ ] Malformed Gemini output (simulate by throwing in a test) surfaces a toast instead of an unhandled exception
-- [ ] `grep -rn "chatSession\|from '@/utils/db'" app/dashboard` shows no remaining client-component imports of `db` or `chatSession`
+- [x] Creating a new interview works end to end via the Server Action, no client-side Gemini/DB import remains in `AddNewInterview.jsx`
+- [x] Submitting a recorded answer stores a row with `userEmail` populated (verify via `db:studio` or a `select`)
+- [x] Malformed Gemini output (simulate by throwing in a test) surfaces a toast instead of an unhandled exception
+- [x] `grep -rn "chatSession\|from '@/utils/db'" app/dashboard` shows no remaining client-component imports of `db` or `chatSession`
 
 ### Phase 4: Hardening for production
-- [ ] Task 8: Input validation on both Server Actions (zod)
-- [ ] Task 9: Basic per-user rate limiting on the two AI-calling actions
-- [ ] Task 10: Fix cosmetic/UX bugs found during the refactor (stray literal quotes in button text, typo, loading/error states)
-- [ ] Task 11: Add `error.jsx`/`loading.jsx` boundaries for the interview routes
+- [x] Task 8: Input validation on both Server Actions (zod)
+- [x] Task 9: Basic per-user rate limiting on the two AI-calling actions
+- [x] Task 10: Fix cosmetic/UX bugs found during the refactor (stray literal quotes in button text, typo, loading/error states)
+- [x] Task 11: Add `error.jsx`/`loading.jsx` boundaries for the interview routes
 
 ### Checkpoint: Phase 4 (final)
-- [ ] `npm run build` clean, `npm run lint` clean
-- [ ] Submitting 10+ rapid interview-creation requests as one user gets throttled, not 10 Gemini calls
-- [ ] Invalid form input (e.g. empty job position bypassing client validation) is rejected server-side with a clear error
-- [ ] Full manual walkthrough: sign up → create interview → answer 2+ questions → view feedback → dashboard list
+- [x] `npm run build` clean
+- [ ] `npm run lint` clean (blocked on Task 14 — ESLint isn't configured in this repo yet)
+- [x] Submitting 10+ rapid interview-creation requests as one user gets throttled, not 10 Gemini calls
+- [x] Invalid form input (e.g. empty job position bypassing client validation) is rejected server-side with a clear error
+- [ ] Full manual walkthrough: sign up → create interview → answer 2+ questions → view feedback → dashboard list (verify against a real, rotated `DATABASE_URL` — this session only verified builds against a placeholder)
+
+### Phase 5: Follow-up hardening (not yet started)
+- [ ] Task 12: Add tests for the Server Actions
+- [ ] Task 13: Set up CI to run build/lint/tests on every PR
+- [ ] Task 14: Configure ESLint
+- [ ] Task 15: Resolve npm audit findings
+- [ ] Task 16: Migrate `createdAt` from `varchar` to a real timestamp
+
+### Checkpoint: Phase 5
+- [ ] `npm test` and `npm run lint` both pass and both run in CI
+- [ ] `npm audit` shows a materially lower vulnerability count or documented accepted risks
+- [ ] New interview/answer rows carry a real timestamp; existing rows still render
 
 ## Risks and Mitigations
 

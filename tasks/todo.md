@@ -308,3 +308,153 @@ recoverable UI instead of Next's default error screen.
 - equivalents under `start/` and `feedback/`
 
 **Estimated scope:** Small (up to 6 small new files)
+
+---
+
+## Task 12: Add tests for the Server Actions
+
+**Description:** `createInterview` and `submitAnswer` (`app/dashboard/_actions/`)
+are now the entire business-logic layer — validation, the Gemini call, and the
+DB write all happen there — with zero automated coverage. A future edit could
+silently reintroduce the `userEmail` field bug or break the JSON-parse guard
+and nobody would notice until production. Set up Vitest (lighter weight than
+Jest, native ESM support, which matters since this project already uses ESM
+config files) and write unit tests against both actions, mocking
+`@clerk/nextjs/server`, `@/utils/db`, and `@/utils/GeminiAIModel`.
+
+**Acceptance criteria:**
+- [ ] Vitest configured and runnable via `npm test`
+- [ ] `createInterview`: tests cover valid input → success path, zod validation rejection, unauthenticated user, Gemini throwing, Gemini returning malformed JSON, DB insert throwing
+- [ ] `submitAnswer`: same coverage, plus a regression test asserting the inserted row has a `userEmail` field populated (guards against the bug fixed earlier reappearing)
+- [ ] Rate limiter (`utils/rateLimit.js`) has a direct unit test (allow under limit, reject over limit, window reset)
+
+**Verification:**
+- [ ] `npm test` passes
+- [ ] `npm run build` still succeeds
+
+**Dependencies:** None (can start immediately)
+
+**Files likely touched:**
+- `vitest.config.js` (new)
+- `app/dashboard/_actions/__tests__/createInterview.test.js` (new)
+- `app/dashboard/_actions/__tests__/submitAnswer.test.js` (new)
+- `utils/__tests__/rateLimit.test.js` (new)
+- `package.json`
+
+**Estimated scope:** Medium (5 files)
+
+---
+
+## Task 13: Set up CI to run build/lint/tests on every PR
+
+**Description:** Nothing currently catches a broken build before it lands —
+today's session hit exactly this (a missing `zod` install broke the build
+silently until the next local run). Add a GitHub Actions workflow that runs
+on every push/PR: install deps, `npm run build`, `npm run lint`, and `npm test`
+(once Task 12 exists).
+
+**Acceptance criteria:**
+- [ ] `.github/workflows/ci.yml` runs on `pull_request` and `push` to `main`
+- [ ] Workflow installs deps, runs build, lint, and test steps
+- [ ] Placeholder env vars provided in the workflow (matching `.env.example`) so the build step doesn't fail on missing `DATABASE_URL`/`GEMINI_API_KEY` the way it did locally in this session
+
+**Verification:**
+- [ ] Push a branch with a deliberately broken build/lint/test and confirm the workflow fails
+- [ ] Push a clean branch and confirm it passes
+
+**Dependencies:** Task 14 (lint must be configured for the lint step to mean anything), Task 12 (for the test step)
+
+**Files likely touched:**
+- `.github/workflows/ci.yml` (new)
+
+**Estimated scope:** Small (1 file)
+
+---
+
+## Task 14: Configure ESLint
+
+**Description:** `npm run lint` currently just prompts to configure ESLint
+interactively — there's no config in the repo at all, so nothing is actually
+linted today. Run through Next's setup (Strict/recommended), commit the
+resulting config, and fix whatever it flags.
+
+**Acceptance criteria:**
+- [ ] ESLint config committed (`.eslintrc.json` or `eslint.config.js`)
+- [ ] `npm run lint` runs non-interactively and passes (or documented exceptions are explicitly disabled with a reason)
+
+**Verification:**
+- [ ] `npm run lint` exits 0 with no prompts
+
+**Dependencies:** None
+
+**Files likely touched:**
+- `.eslintrc.json` (new)
+- possibly minor fixes across `app/`, `utils/`, `components/` for whatever the linter flags
+
+**Estimated scope:** Small–Medium (depends on how much the linter flags)
+
+---
+
+## Task 15: Resolve npm audit findings
+
+**Description:** `npm audit` currently reports 23 vulnerabilities (1 low, 8
+moderate, 12 high, 2 critical) in transitive dependencies — confirmed
+pre-existing (present with or without this session's changes), not introduced
+by the refactor. Start with `npm audit fix` (non-breaking); evaluate anything
+left over that needs `--force` case by case rather than forcing it blindly,
+since major transitive bumps can break Next.js/Clerk/Drizzle compatibility.
+
+**Acceptance criteria:**
+- [ ] `npm audit fix` run, resulting diff reviewed (not blindly force-pushed)
+- [ ] Any remaining high/critical findings either resolved or explicitly documented as accepted risk with rationale (e.g. dev-only dependency, no reachable path)
+- [ ] `npm run build` still succeeds after any dependency bumps
+
+**Verification:**
+- [ ] `npm audit` shows a materially lower count, or a documented reason for each remaining finding
+- [ ] Full manual walkthrough still works after dependency updates (regressions from transitive bumps are possible)
+
+**Dependencies:** None
+
+**Files likely touched:**
+- `package.json`
+- `package-lock.json`
+
+**Estimated scope:** Small–Medium (mostly dependency bumps, but requires manual regression testing)
+
+---
+
+## Task 16: Migrate `createdAt` from `varchar` to a real timestamp
+
+**Description:** `MockInterview.createdAt` and `UserAnswer.createdAt` are
+stored as `varchar` strings formatted `DD-MM-yyyy` (day precision only) via
+`moment().format(...)`, instead of a proper timestamp column. This makes
+correct sorting/filtering fragile (lexicographic string sort on `DD-MM-yyyy`
+does not sort chronologically across month/year boundaries) and blocks
+anything that needs real time precision (e.g. a DB-backed rate-limit window,
+if `utils/rateLimit.js`'s in-memory approach is ever upgraded). This is a
+schema migration touching production data — existing rows have
+non-timestamp-parseable strings, so this needs an additive, data-safe
+migration, not a naive column type change.
+
+**Acceptance criteria:**
+- [ ] New `timestamp` column added alongside the existing `createdAt` varchar (additive, not a destructive rename)
+- [ ] Both Server Actions (`createInterview`, `submitAnswer`) write the new timestamp column going forward
+- [ ] `InterviewItemCard.jsx` and any other display of `createdAt` updated to use the new column, formatted for display
+- [ ] Existing varchar column left in place (or backfilled/dropped in a clearly separate follow-up) rather than dropped in the same migration that introduces the new column
+- [ ] Drizzle migration generated via `npm run db:push` and verified against a real (non-placeholder) database
+
+**Verification:**
+- [ ] `npm run db:push` succeeds against a real Neon instance
+- [ ] New interviews/answers show a correctly sorted, real-time-precision timestamp
+- [ ] Existing rows still render without error (their old varchar `createdAt` still displays if the new column is null for pre-migration rows)
+
+**Dependencies:** Requires a real (rotated) `DATABASE_URL`, not the placeholder used during this session's build verification
+
+**Files likely touched:**
+- `utils/schema.js`
+- `app/dashboard/_actions/createInterview.js`
+- `app/dashboard/_actions/submitAnswer.js`
+- `app/dashboard/_components/InterviewItemCard.jsx`
+- generated Drizzle migration file(s)
+
+**Estimated scope:** Medium (schema change + call-site updates + requires a live DB to verify, unlike every prior task in this list)
