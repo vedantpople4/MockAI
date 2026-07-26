@@ -1,56 +1,45 @@
-"use client"
-import React, { useEffect, useState } from 'react'
 import { db } from '@/utils/db'
 import { MockInterview } from '@/utils/schema'
-import { eq } from 'drizzle-orm'
-import QuestionsSection from './_components/QuestionsSection'
-import RecordAnswerSection from './_components/RecordAnswerSection'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { currentUser } from '@clerk/nextjs/server'
+import { and, eq } from 'drizzle-orm'
+import { notFound } from 'next/navigation'
+import React from 'react'
+import StartInterviewClient from './_components/StartInterviewClient'
 
-function StartInterview({ params }) {
+async function StartInterview({ params }) {
 
-    const [interviewData, setInterviewData] = useState();
-    const [mockInterviewQuestion, setMockInterviewQuestion] = useState();
-    const [activeQuestionIndex, setActiveQuestionIndex] = useState(0);
-    useEffect(() => {
-        GetInterviewDetails();
-    }, []);
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
 
-    const GetInterviewDetails = async () => {
-        const result = await db.select().from(MockInterview).where(eq(MockInterview.mockId, params.interviewId))
-        //setInterviewData(result[0])
-        //console.log(result[0]);
-        const jsonMockResp = JSON.parse(result[0].jsonMockResp);
-        //console.log(jsonMockResp);
-        setMockInterviewQuestion(jsonMockResp);
-        setInterviewData(result[0]);
+    const result = userEmail
+        ? await db.select().from(MockInterview)
+            .where(and(
+                eq(MockInterview.mockId, params.interviewId),
+                eq(MockInterview.createdBy, userEmail)
+            ))
+        : [];
+
+    const interviewData = result[0];
+    if (!interviewData) {
+        notFound();
     }
+
+    let mockInterviewQuestion = [];
+    let parseError = false;
+    try {
+        const parsed = JSON.parse(interviewData.jsonMockResp);
+        if (!Array.isArray(parsed)) throw new Error('Parsed questions are not an array');
+        mockInterviewQuestion = parsed;
+    } catch (e) {
+        parseError = true;
+    }
+
     return (
-        <div>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
-                <QuestionsSection
-                    mockInterviewQuestion={mockInterviewQuestion}
-                    activeQuestionIndex={activeQuestionIndex}
-                />
-                <RecordAnswerSection
-                    mockInterviewQuestion={mockInterviewQuestion}
-                    activeQuestionIndex={activeQuestionIndex}
-                    interviewData={interviewData}
-                />
-            </div>
-            <div className='flex justify-end gap-6'>
-                {activeQuestionIndex>0 &&
-                <Button onClick={()=>setActiveQuestionIndex(activeQuestionIndex-1)}>Previous Question</Button>}
-                {activeQuestionIndex!=mockInterviewQuestion?.length-1&&
-                <Button onClick={()=>setActiveQuestionIndex(activeQuestionIndex+1)}>Next Question</Button>}
-                {activeQuestionIndex==mockInterviewQuestion?.length-1&&
-                <Link href={'/dashboard/interview/'+interviewData?.mockId+'/feedback'}>
-                 <Button>End Interview</Button>
-                </Link>
-               }
-            </div>
-        </div>
+        <StartInterviewClient
+            interviewData={interviewData}
+            mockInterviewQuestion={mockInterviewQuestion}
+            parseError={parseError}
+        />
     )
 }
 
