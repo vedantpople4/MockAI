@@ -1,27 +1,32 @@
-"use client"
 import { Button } from '@/components/ui/button'
 import { db } from '@/utils/db'
 import { MockInterview } from '@/utils/schema'
-import { eq } from 'drizzle-orm'
-import { Lightbulb, WebcamIcon } from 'lucide-react'
+import { currentUser } from '@clerk/nextjs/server'
+import { and, eq } from 'drizzle-orm'
+import { Lightbulb } from 'lucide-react'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
-import Webcam from 'react-webcam'
+import { notFound } from 'next/navigation'
+import React from 'react'
+import WebcamPreview from './_components/WebcamPreview'
 
-function Interview({ params }) {
+async function Interview({ params }) {
 
-    const [interViewData, setInterviewData] = useState();
-    const [webCamEnabled, setWebCamEnabled] = useState();
-    useEffect(() => {
-        //console.log(params.interviewId)
-        GetInterviewDetails();
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
 
-    }, [])
+    const result = userEmail
+        ? await db.select().from(MockInterview)
+            .where(and(
+                eq(MockInterview.mockId, params.interviewId),
+                eq(MockInterview.createdBy, userEmail)
+            ))
+        : [];
 
-    const GetInterviewDetails = async () => {
-        const result = await db.select().from(MockInterview).where(eq(MockInterview.mockId, params.interviewId))
-        setInterviewData(result[0])
+    const interViewData = result[0];
+    if (!interViewData) {
+        notFound();
     }
+
     return (
         <div className='my-10'>
             <h2 className='font-bold text-2xl'>Let's get started</h2>
@@ -29,32 +34,16 @@ function Interview({ params }) {
 
                 <div className='flex flex-col my-5 gap-3'>
                     <div className='flex flex-col p-5 rounded-lg border gap-5'>
-                        <h2 className='text-lg'><strong>Job Role / Job Position: </strong>{interViewData ? interViewData.jobPosition : "Loading"}</h2>
-                        <h2 className='text-lg'><strong>Job Description / Tech Stack: </strong>{interViewData ? interViewData.jobDescription : "Loading"}</h2>
-                        <h2 className='text-lg'><strong>Years of Experience: </strong>{interViewData ? interViewData.jobExperience : "Loading"}</h2>
+                        <h2 className='text-lg'><strong>Job Role / Job Position: </strong>{interViewData.jobPosition}</h2>
+                        <h2 className='text-lg'><strong>Job Description / Tech Stack: </strong>{interViewData.jobDescription}</h2>
+                        <h2 className='text-lg'><strong>Years of Experience: </strong>{interViewData.jobExperience}</h2>
                     </div>
                     <div className='p-5 border rounded-lg border-yellow-500 bg-yellow-50'>
                         <h2 className='flex gap-2 items-center'><Lightbulb/><strong>Information</strong></h2>
                         <h2 className='mt-3'>{process.env.NEXT_PUBLIC_INFORMATION}</h2>
                     </div>
                 </div>
-                <div>
-                    {webCamEnabled ? <Webcam
-                        onUserMedia={() => setWebCamEnabled(true)}
-                        onUserMediaError={() => setWebCamEnabled(false)}
-                        mirrored={true}
-                        style={{
-                            height: 300,
-                            width: 300
-                        }}
-                        />
-                        :
-                        <>
-                            <WebcamIcon className='h-72 w-full my-7 p-20 bg-secondary rounded-lg border' />
-                            <Button variant="ghost" className="w-full" onClick={() => setWebCamEnabled(true)}>Enable Web Cam and Microphone</Button>
-                        </>
-                    }
-                </div>
+                <WebcamPreview />
             </div>
             <div className='flex justify-end items-end'>
                 <Link href={'/dashboard/interview/'+params.interviewId+'/start'}>
