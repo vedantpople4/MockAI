@@ -379,11 +379,11 @@ linted today. Run through Next's setup (Strict/recommended), commit the
 resulting config, and fix whatever it flags.
 
 **Acceptance criteria:**
-- [ ] ESLint config committed (`.eslintrc.json` or `eslint.config.js`)
-- [ ] `npm run lint` runs non-interactively and passes (or documented exceptions are explicitly disabled with a reason)
+- [x] ESLint config committed (`.eslintrc.json` or `eslint.config.js`)
+- [x] `npm run lint` runs non-interactively and passes (or documented exceptions are explicitly disabled with a reason)
 
 **Verification:**
-- [ ] `npm run lint` exits 0 with no prompts
+- [x] `npm run lint` exits 0 with no prompts
 
 **Dependencies:** None
 
