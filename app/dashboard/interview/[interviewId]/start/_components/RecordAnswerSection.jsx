@@ -6,15 +6,10 @@ import React, { useEffect, useState } from 'react'
 import Webcam from 'react-webcam'
 import { Mic } from 'lucide-react';
 import { toast } from 'sonner';
-import { chatSession } from '@/utils/GeminiAIModel';
-import { db } from '@/utils/db';
-import { UserAnswer } from '@/utils/schema';
-import { useUser } from '@clerk/nextjs';
-import moment from 'moment';
+import { submitAnswer } from '@/app/dashboard/_actions/submitAnswer';
 
 function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData }) {
     const [userAnswer, setUserAnswer] = useState('');
-    const { user } = useUser();
     const [loading, setLoading] = useState(false);
     const {
         error,
@@ -55,39 +50,23 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     }
 
     const UpdateUserAnswer = async () => {
-
-        console.log(userAnswer)
         setLoading(true);
-        const feedbackPrompt = "Question:" + mockInterviewQuestion[activeQuestionIndex]?.question +
-            ", User Answer:" + userAnswer + ", depending on question and user answer for given interview question " +
-            " please give a rating for answer and feedback as area of improvement if any" +
-            "in just 3-5 lines to improve it JSON format with rating field and feedback field";
 
-        const result = await chatSession.sendMessage(feedbackPrompt);
+        const result = await submitAnswer({
+            mockIdRef: interviewData?.mockId,
+            question: mockInterviewQuestion[activeQuestionIndex]?.question,
+            correctAns: mockInterviewQuestion[activeQuestionIndex]?.answer,
+            userAns: userAnswer,
+        });
 
-        const mockJsonResp = (result.response.text()).replace('```json', '').replace('```', '')
-        console.log(mockJsonResp);
-        const JsonFeedbackResp = JSON.parse(mockJsonResp);
-        console.log(user?.primaryEmailAddress?.emailAddress);
-        const currUserEmail = user?.primaryEmailAddress?.emailAddress;
-
-        const resp = await db.insert(UserAnswer)
-            .values({
-                mockIdRef: interviewData?.mockId,
-                question: mockInterviewQuestion[activeQuestionIndex]?.question,
-                correctAns: mockInterviewQuestion[activeQuestionIndex]?.answer,
-                userAns: userAnswer,
-                feedback: JsonFeedbackResp?.feedback,
-                rating: JsonFeedbackResp?.rating,
-                user: currUserEmail,
-                createdAt: moment().format('DD-MM-yyyy'),
-            })
-
-        if (resp) {
-            toast('User Answer recorded succesfully');
-            setUserAnswer('');
-            setResults([]);
+        if (result?.error) {
+            toast(result.error);
+            setLoading(false);
+            return;
         }
+
+        toast('User Answer recorded succesfully');
+        setUserAnswer('');
         setResults([]);
         setLoading(false);
     }
