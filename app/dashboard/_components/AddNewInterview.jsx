@@ -80,7 +80,7 @@ function AddNewInterview() {
                                 <Button type="submit" disabled={loading}>
                                     {loading?
                                     <>
-                                    <LoaderCircle className='animate-spin'/>'Generating Qustions'
+                                    <LoaderCircle className='animate-spin'/>Generating Questions
                                     </> :'Start Interview'
                                     } </Button>
                             </div>

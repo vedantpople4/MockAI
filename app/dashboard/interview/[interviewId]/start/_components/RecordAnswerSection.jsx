@@ -92,7 +92,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
             >
                 {isRecording ?
                     <h2 className='text-red-500 flex gap-2'>
-                        <Mic /> 'Stop Recording'
+                        <Mic /> Stop Recording
                     </h2>
                     :
                     'Record Answer'}
