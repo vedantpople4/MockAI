@@ -1,9 +1,9 @@
-"use client"
-
 import { db } from '@/utils/db'
-import { UserAnswer } from '@/utils/schema'
-import { eq } from 'drizzle-orm'
-import React, { useEffect, useState } from 'react'
+import { MockInterview, UserAnswer } from '@/utils/schema'
+import { currentUser } from '@clerk/nextjs/server'
+import { and, eq } from 'drizzle-orm'
+import { notFound } from 'next/navigation'
+import React from 'react'
 import {
     Collapsible,
     CollapsibleContent,
@@ -11,26 +11,29 @@ import {
 } from "@/components/ui/collapsible"
 import { ChevronsUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
+async function Feedback({ params }) {
 
-function Feedback({ params }) {
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
 
-    const [feedbackList, setFeedbackList] = useState([]);
-    const router = useRouter();
-    useEffect(() => {
-        GetFeedback();
-    }, [])
-    const GetFeedback = async () => {
-        const result = await db.select()
-            .from(UserAnswer)
-            .where(eq(UserAnswer.mockIdRef, params.interviewId))
-            .orderBy(UserAnswer.id)
+    const interview = userEmail
+        ? await db.select().from(MockInterview)
+            .where(and(
+                eq(MockInterview.mockId, params.interviewId),
+                eq(MockInterview.createdBy, userEmail)
+            ))
+        : [];
 
-        //console.log(result);
-        setFeedbackList(result);
-
+    if (!interview[0]) {
+        notFound();
     }
+
+    const feedbackList = await db.select()
+        .from(UserAnswer)
+        .where(eq(UserAnswer.mockIdRef, params.interviewId))
+        .orderBy(UserAnswer.id)
 
     return (
         <div className='p-10'>
@@ -40,7 +43,7 @@ function Feedback({ params }) {
             {feedbackList?.length==0?
             <h2 className='font-bold text-xl text-gray-500'>No interview feedback record found</h2>
             :
-            <>    
+            <>
             <h2 className='text-sm text-gray-500'>Find below the interview question, correct answer, your answer, rating and feedback for improvement</h2>
             {feedbackList && feedbackList.map((item, index) => (
                 <Collapsible key={index} className='mt-5'>
@@ -57,7 +60,9 @@ function Feedback({ params }) {
                     </CollapsibleContent>
                 </Collapsible>
             ))}
-            <Button onClick={()=>router.replace('/dashboard')}>Go Home</Button>
+            <Link href='/dashboard' replace>
+                <Button>Go Home</Button>
+            </Link>
             </>
             }
         </div>
