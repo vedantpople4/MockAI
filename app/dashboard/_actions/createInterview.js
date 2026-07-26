@@ -7,6 +7,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
 import { z } from 'zod'
+import { checkRateLimit } from '@/utils/rateLimit'
 
 const createInterviewSchema = z.object({
     jobPosition: z.string().trim().min(2, 'Job position is too short.').max(100, 'Job position is too long.'),
@@ -26,6 +27,11 @@ export async function createInterview(input) {
 
     if (!userEmail) {
         return { error: 'You must be signed in to create an interview.' };
+    }
+
+    const { allowed } = checkRateLimit(`create-interview:${userEmail}`, { limit: 5, windowMs: 60_000 });
+    if (!allowed) {
+        return { error: 'You are creating interviews too quickly. Please wait a minute and try again.' };
     }
 
     const questionCount = process.env.NEXT_PUBLIC_INTERVIEW_QUESTION_COUNT || 5;

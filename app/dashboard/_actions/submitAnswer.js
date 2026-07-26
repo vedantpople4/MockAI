@@ -6,6 +6,7 @@ import { chatSession } from '@/utils/GeminiAIModel'
 import { currentUser } from '@clerk/nextjs/server'
 import moment from 'moment'
 import { z } from 'zod'
+import { checkRateLimit } from '@/utils/rateLimit'
 
 const submitAnswerSchema = z.object({
     mockIdRef: z.string().uuid('Invalid interview reference.'),
@@ -26,6 +27,11 @@ export async function submitAnswer(input) {
 
     if (!userEmail) {
         return { error: 'You must be signed in to submit an answer.' };
+    }
+
+    const { allowed } = checkRateLimit(`submit-answer:${userEmail}`, { limit: 10, windowMs: 60_000 });
+    if (!allowed) {
+        return { error: 'You are submitting answers too quickly. Please wait a moment and try again.' };
     }
 
     const feedbackPrompt = "Question:" + question +
