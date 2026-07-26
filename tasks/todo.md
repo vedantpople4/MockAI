@@ -323,14 +323,14 @@ config files) and write unit tests against both actions, mocking
 `@clerk/nextjs/server`, `@/utils/db`, and `@/utils/GeminiAIModel`.
 
 **Acceptance criteria:**
-- [ ] Vitest configured and runnable via `npm test`
-- [ ] `createInterview`: tests cover valid input → success path, zod validation rejection, unauthenticated user, Gemini throwing, Gemini returning malformed JSON, DB insert throwing
-- [ ] `submitAnswer`: same coverage, plus a regression test asserting the inserted row has a `userEmail` field populated (guards against the bug fixed earlier reappearing)
-- [ ] Rate limiter (`utils/rateLimit.js`) has a direct unit test (allow under limit, reject over limit, window reset)
+- [x] Vitest configured and runnable via `npm test`
+- [x] `createInterview`: tests cover valid input → success path, zod validation rejection, unauthenticated user, Gemini throwing, Gemini returning malformed JSON, DB insert throwing
+- [x] `submitAnswer`: same coverage, plus a regression test asserting the inserted row has a `userEmail` field populated (guards against the bug fixed earlier reappearing)
+- [x] Rate limiter (`utils/rateLimit.js`) has a direct unit test (allow under limit, reject over limit, window reset)
 
 **Verification:**
-- [ ] `npm test` passes
-- [ ] `npm run build` still succeeds
+- [x] `npm test` passes
+- [x] `npm run build` still succeeds
 
 **Dependencies:** None (can start immediately)
 

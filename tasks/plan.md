@@ -93,8 +93,8 @@ not theoretical.
 - [x] Invalid form input (e.g. empty job position bypassing client validation) is rejected server-side with a clear error
 - [ ] Full manual walkthrough: sign up → create interview → answer 2+ questions → view feedback → dashboard list (verify against a real, rotated `DATABASE_URL` — this session only verified builds against a placeholder)
 
-### Phase 5: Follow-up hardening (not yet started)
-- [ ] Task 12: Add tests for the Server Actions
+### Phase 5: Follow-up hardening
+- [x] Task 12: Add tests for the Server Actions (19 tests: createInterview, submitAnswer, rateLimit)
 - [ ] Task 13: Set up CI to run build/lint/tests on every PR
 - [ ] Task 14: Configure ESLint
 - [ ] Task 15: Resolve npm audit findings
