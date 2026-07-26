@@ -6,8 +6,21 @@ import { chatSession } from '@/utils/GeminiAIModel'
 import { currentUser } from '@clerk/nextjs/server'
 import { v4 as uuidv4 } from 'uuid'
 import moment from 'moment'
+import { z } from 'zod'
 
-export async function createInterview({ jobPosition, jobDescription, jobExperience }) {
+const createInterviewSchema = z.object({
+    jobPosition: z.string().trim().min(2, 'Job position is too short.').max(100, 'Job position is too long.'),
+    jobDescription: z.string().trim().min(2, 'Job description is too short.').max(2000, 'Job description is too long.'),
+    jobExperience: z.coerce.number().int().min(0, 'Years of experience must be 0 or more.').max(50, 'Years of experience must be 50 or less.'),
+});
+
+export async function createInterview(input) {
+    const parsed = createInterviewSchema.safeParse(input);
+    if (!parsed.success) {
+        return { error: parsed.error.issues[0]?.message || 'Invalid input.' };
+    }
+    const { jobPosition, jobDescription, jobExperience } = parsed.data;
+
     const user = await currentUser();
     const userEmail = user?.primaryEmailAddress?.emailAddress;
 

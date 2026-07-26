@@ -5,8 +5,22 @@ import { UserAnswer } from '@/utils/schema'
 import { chatSession } from '@/utils/GeminiAIModel'
 import { currentUser } from '@clerk/nextjs/server'
 import moment from 'moment'
+import { z } from 'zod'
 
-export async function submitAnswer({ mockIdRef, question, correctAns, userAns }) {
+const submitAnswerSchema = z.object({
+    mockIdRef: z.string().uuid('Invalid interview reference.'),
+    question: z.string().trim().min(1, 'Question is required.').max(2000, 'Question is too long.'),
+    correctAns: z.string().trim().max(5000, 'Correct answer is too long.').optional().default(''),
+    userAns: z.string().trim().min(1, 'Your answer cannot be empty.').max(10000, 'Your answer is too long.'),
+});
+
+export async function submitAnswer(input) {
+    const parsed = submitAnswerSchema.safeParse(input);
+    if (!parsed.success) {
+        return { error: parsed.error.issues[0]?.message || 'Invalid input.' };
+    }
+    const { mockIdRef, question, correctAns, userAns } = parsed.data;
+
     const user = await currentUser();
     const userEmail = user?.primaryEmailAddress?.emailAddress;
 
