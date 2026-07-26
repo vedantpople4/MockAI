@@ -95,7 +95,7 @@ not theoretical.
 
 ### Phase 5: Follow-up hardening
 - [x] Task 12: Add tests for the Server Actions (19 tests: createInterview, submitAnswer, rateLimit)
-- [ ] Task 13: Set up CI to run build/lint/tests on every PR
+- [x] Task 13: Set up CI to run build/lint/tests on every PR (`.github/workflows/ci.yml`; not yet verified on GitHub since nothing's been pushed to origin)
 - [x] Task 14: Configure ESLint (`.eslintrc.json`, zero warnings/errors)
 - [ ] Task 15: Resolve npm audit findings
 - [ ] Task 16: Migrate `createdAt` from `varchar` to a real timestamp

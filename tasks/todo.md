@@ -354,13 +354,14 @@ on every push/PR: install deps, `npm run build`, `npm run lint`, and `npm test`
 (once Task 12 exists).
 
 **Acceptance criteria:**
-- [ ] `.github/workflows/ci.yml` runs on `pull_request` and `push` to `main`
-- [ ] Workflow installs deps, runs build, lint, and test steps
-- [ ] Placeholder env vars provided in the workflow (matching `.env.example`) so the build step doesn't fail on missing `DATABASE_URL`/`GEMINI_API_KEY` the way it did locally in this session
+- [x] `.github/workflows/ci.yml` runs on `pull_request` and `push` to `main`
+- [x] Workflow installs deps, runs build, lint, and test steps
+- [x] Placeholder env vars provided in the workflow (matching `.env.example`) so the build step doesn't fail on missing `DATABASE_URL`/`GEMINI_API_KEY` the way it did locally in this session
 
 **Verification:**
-- [ ] Push a branch with a deliberately broken build/lint/test and confirm the workflow fails
-- [ ] Push a clean branch and confirm it passes
+- [x] Simulated locally: `npm ci` + `npm run lint` + `npm test` + `npm run build`, same commands/order as the workflow, all exit 0
+- [ ] Push a branch with a deliberately broken build/lint/test and confirm the workflow fails on GitHub (not yet done — nothing has been pushed to origin this session)
+- [ ] Push a clean branch and confirm it passes on GitHub (blocked on the same)
 
 **Dependencies:** Task 14 (lint must be configured for the lint step to mean anything), Task 12 (for the test step)
 
