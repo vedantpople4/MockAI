@@ -406,13 +406,24 @@ left over that needs `--force` case by case rather than forcing it blindly,
 since major transitive bumps can break Next.js/Clerk/Drizzle compatibility.
 
 **Acceptance criteria:**
-- [ ] `npm audit fix` run, resulting diff reviewed (not blindly force-pushed)
-- [ ] Any remaining high/critical findings either resolved or explicitly documented as accepted risk with rationale (e.g. dev-only dependency, no reachable path)
-- [ ] `npm run build` still succeeds after any dependency bumps
+- [x] `npm audit fix` run, resulting diff reviewed (not blindly force-pushed)
+- [x] Any remaining high/critical findings either resolved or explicitly documented as accepted risk with rationale (e.g. dev-only dependency, no reachable path)
+- [x] `npm run build` still succeeds after any dependency bumps
 
 **Verification:**
-- [ ] `npm audit` shows a materially lower count, or a documented reason for each remaining finding
-- [ ] Full manual walkthrough still works after dependency updates (regressions from transitive bumps are possible)
+- [x] `npm audit` shows a materially lower count (35 → 27), or a documented reason for each remaining finding
+- [ ] Full manual walkthrough still works after dependency updates — not yet done, requires a real (rotated) `DATABASE_URL`/Clerk keys, same blocker noted throughout this session
+
+**Resolved this session (35 → 27 findings):**
+- `npm audit fix` (non-breaking): `@clerk/nextjs` middleware-bypass, `cookie`/`js-cookie`/`path-to-regexp` (transitive via Clerk), `cross-spawn`, `micromatch`, `picomatch`, `yaml`, and `@clerk/clerk-react` (authorization bypass, became fixable after the Clerk bump)
+- `next` 14.2.5 → 14.2.35 (patch, same minor) — done for general hygiene, but **did not** actually resolve the Next.js CVEs or the vendored `postcss` finding; npm's own suggested fix for those is `next@16.2.12`, a major version (see below)
+
+**Remaining findings — documented as accepted risk, not fixed this session:**
+- **`next` core CVEs + vendored `postcss` (many, several high)** — real fix requires Next.js 16 (major version). This is a framework migration, not a dependency bump — deserves its own dedicated task with real regression testing, not something to force through a hygiene pass. Recommend scheduling separately.
+- **`drizzle-orm` SQL injection via improperly escaped identifiers (high, GHSA-gpj5-g38j-94v9)** — fix requires 0.33 → 0.45.2 (breaking). User decision (asked directly): skip for now rather than bump without a live DB to verify query-builder behavior against. Revisit if/when Task 16 (which needs a real DB anyway) happens.
+- **`drizzle-kit`/`esbuild` chain** — dev-only tooling (`db:push`/`db:studio`), not shipped to production, tied to the same drizzle-orm version decision above.
+- **ESLint toolchain (`brace-expansion`/`minimatch`/etc.)** — dev-only, fix requires `eslint@10.x` (major), which would likely break `eslint-config-next@14.2.5`'s peer compatibility (pinned to Next 14's ESLint 8 line) — not worth risking the lint setup just established in Task 14 for a dev-only, non-shipped dependency.
+- **`uuid` buffer bounds check (moderate, GHSA-w5hq-g745-h8pq)** — confirmed not reachable: the codebase only calls `uuidv4()` with no arguments (`app/dashboard/_actions/createInterview.js`); the advisory only affects v3/v5/v6 functions when a caller manually supplies a `buf` parameter, which never happens here. No upgrade needed.
 
 **Dependencies:** None
 
