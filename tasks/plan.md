@@ -98,7 +98,7 @@ not theoretical.
 - [x] Task 13: Set up CI to run build/lint/tests on every PR (`.github/workflows/ci.yml`; not yet verified on GitHub since nothing's been pushed to origin)
 - [x] Task 14: Configure ESLint (`.eslintrc.json`, zero warnings/errors)
 - [x] Task 15: Resolve npm audit findings (35 → 27; remaining findings documented as accepted risk — see tasks/todo.md for the Next.js 16 / drizzle-orm / eslint-toolchain rationale)
-- [ ] Task 16: Migrate `createdAt` from `varchar` to a real timestamp
+- [ ] Task 16: Migrate `createdAt` from `varchar` to a real timestamp (code done — schema/actions/display; `npm run db:push` against the real Neon instance still needed, requires real credentials not available in this environment)
 
 ### Checkpoint: Phase 5
 - [ ] `npm test` and `npm run lint` both pass and both run in CI

@@ -449,16 +449,17 @@ non-timestamp-parseable strings, so this needs an additive, data-safe
 migration, not a naive column type change.
 
 **Acceptance criteria:**
-- [ ] New `timestamp` column added alongside the existing `createdAt` varchar (additive, not a destructive rename)
-- [ ] Both Server Actions (`createInterview`, `submitAnswer`) write the new timestamp column going forward
-- [ ] `InterviewItemCard.jsx` and any other display of `createdAt` updated to use the new column, formatted for display
-- [ ] Existing varchar column left in place (or backfilled/dropped in a clearly separate follow-up) rather than dropped in the same migration that introduces the new column
-- [ ] Drizzle migration generated via `npm run db:push` and verified against a real (non-placeholder) database
+- [x] New `timestamp` column added alongside the existing `createdAt` varchar (additive, not a destructive rename) — deliberately no `defaultNow()`: a volatile default would backfill every pre-existing row with the migration's execution time on `ALTER TABLE`, which is wrong data (not their real creation time), not just imprecise
+- [x] Both Server Actions (`createInterview`, `submitAnswer`) write the new timestamp column going forward
+- [x] `InterviewItemCard.jsx` updated to use the new column when present, falling back to the legacy `createdAt` string otherwise
+- [x] Existing varchar column left in place, untouched
+- [ ] **Blocked:** `npm run db:push` against a real Neon instance — needs a real, rotated `DATABASE_URL`, not available in this environment. Code is ready; someone with real credentials needs to run `npm run db:push` to actually apply the column to the live database.
 
 **Verification:**
-- [ ] `npm run db:push` succeeds against a real Neon instance
-- [ ] New interviews/answers show a correctly sorted, real-time-precision timestamp
-- [ ] Existing rows still render without error (their old varchar `createdAt` still displays if the new column is null for pre-migration rows)
+- [x] `npm test`, `npm run lint`, `npm run build` all pass with the schema/action/display changes
+- [ ] `npm run db:push` succeeds against a real Neon instance — not yet done, blocked as above
+- [ ] New interviews/answers show a correctly sorted, real-time-precision timestamp — can't verify without a live DB
+- [ ] Existing rows still render without error using the fallback path — can't verify without real pre-migration data
 
 **Dependencies:** Requires a real (rotated) `DATABASE_URL`, not the placeholder used during this session's build verification
 
