@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import React from 'react'
+import moment from 'moment'
 
 function InterviewItemCard({ interview }) {
 
@@ -16,13 +17,19 @@ function InterviewItemCard({ interview }) {
         router.push('/dashboard/interview/'+interview?.mockId+'/feedback')
         //console.log("pushed")
     }
-    
+
+    // Older rows predate the createdAtTimestamp column and only have the
+    // legacy day-precision createdAt string - fall back to that if the
+    // real timestamp isn't set.
+    const createdAtDisplay = interview?.createdAtTimestamp
+        ? moment(interview.createdAtTimestamp).format('DD MMM YYYY')
+        : interview?.createdAt;
 
     return (
         <div className='border shadow-sm rounded-lg p-3'>
             <h2 className='font bold text-primary'>{interview?.jobPosition}</h2>
             <h2 className='font bold text-sm text-gray-600'>{interview?.jobExperience} Years of experience</h2>
-            <h2 className='text-sm text-gray-500'>Created At: {interview.createdAt}</h2>
+            <h2 className='text-sm text-gray-500'>Created At: {createdAtDisplay}</h2>
             <div className='flex justify-between mt-2 gap-5'>
                 <Button size='sm' variant='outline' className='w-full' onClick={onFeedback}>Feedback</Button>
                 <Button size='sm' className='w-full' onClick={onStart}>Start</Button>

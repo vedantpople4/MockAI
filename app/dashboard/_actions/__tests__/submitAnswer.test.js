@@ -115,6 +115,7 @@ describe('submitAnswer', () => {
 
         expect(result).toEqual({ success: true })
         expect(valuesMock).toHaveBeenCalledTimes(1)
+        expect(valuesMock.mock.calls[0][0].createdAtTimestamp).toBeInstanceOf(Date)
     })
 
     it('inserts the row with a userEmail field (regression: previously inserted "user" instead)', async () => {

@@ -58,7 +58,8 @@ export async function createInterview(input) {
                 jobDescription,
                 jobExperience,
                 createdBy: userEmail,
-                createdAt: moment().format('DD-MM-yyyy')
+                createdAt: moment().format('DD-MM-yyyy'),
+                createdAtTimestamp: new Date(),
             }).returning({ mockId: MockInterview.mockId });
 
         return { mockId: inserted[0]?.mockId };

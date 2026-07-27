@@ -59,6 +59,7 @@ export async function submitAnswer(input) {
                 rating: feedback?.rating,
                 userEmail,
                 createdAt: moment().format('DD-MM-yyyy'),
+                createdAtTimestamp: new Date(),
             })
 
         return { success: true };

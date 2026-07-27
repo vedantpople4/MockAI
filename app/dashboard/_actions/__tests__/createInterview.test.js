@@ -30,11 +30,11 @@ function mockSignedInUser(email = 'user@example.com') {
 }
 
 function mockInsertSuccess(mockId = 'generated-mock-id') {
-    db.insert.mockReturnValue({
-        values: vi.fn(() => ({
-            returning: vi.fn().mockResolvedValue([{ mockId }]),
-        })),
-    })
+    const valuesMock = vi.fn(() => ({
+        returning: vi.fn().mockResolvedValue([{ mockId }]),
+    }))
+    db.insert.mockReturnValue({ values: valuesMock })
+    return valuesMock
 }
 
 beforeEach(() => {
@@ -113,11 +113,12 @@ describe('createInterview', () => {
         chatSession.sendMessage.mockResolvedValue({
             response: { text: () => '```json\n[{"question":"Q","answer":"A"}]\n```' },
         })
-        mockInsertSuccess('abc-123')
+        const valuesMock = mockInsertSuccess('abc-123')
 
         const result = await createInterview(validInput)
 
         expect(result).toEqual({ mockId: 'abc-123' })
         expect(db.insert).toHaveBeenCalledTimes(1)
+        expect(valuesMock.mock.calls[0][0].createdAtTimestamp).toBeInstanceOf(Date)
     })
 })
